@@ -4,6 +4,12 @@ FileSync will keep files synchronized between src and dest locations.  It can al
 
 ***Note: This has never been run/tested on any Mac/UNIX box. My guess is it will not work, as FileSync uses the Node file System extensively, and I'm sure there are major differences in how the calls should be made.***
 
+# Install/Run
+* Install: npm -g pgmjah-filesync
+* Run: filesync <fsconfig.json>
+
+***Note: You can create a default 'fsconfig.json' file in the current directory by running filesync, then type 'mkdef' and enter.***
+
 ## Features
 
 * Clone git repositories

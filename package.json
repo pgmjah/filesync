@@ -1,5 +1,5 @@
 {
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"publisher": "pgmjah",
 	"name": "pgmjah-filesync",
 	"description": "Synchronize files between directories",
