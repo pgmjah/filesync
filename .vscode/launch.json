@@ -11,38 +11,10 @@
 			"name": "filesync.js",
 			"program": "${workspaceFolder}/filesync.js",
 			"args": [
-				"c:/dev/filesync/test/fsconfig.json"
+				"${workspaceFolder}/test/fsconfig.json"
 			],
 			"skipFiles": [
 				"<node_internals>/**"
-			]
-		},
-		{
-			"name": "Run Extension",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
-			]
-		},
-		{
-			"name": "Run From Bat File",
-			"type":"node",
-			"request": "launch",
-			"runtimeExecutable": "${workspaceFolder}\\filesync.bat",
-			"args": [
-				"c:/dev/filesync/test/fsconfig.json"
-			]
-		},
-		{
-			"name": "Extension Tests",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/test/suite/index"
 			]
 		}
 	]

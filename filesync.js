@@ -32,7 +32,7 @@ class fileSync extends EventEmitter
 					let destName = destPath.name === "*" ? srcPath.name : destPath.name;
 					let name = `${srcPath.dir}/${destName}${destPath.ext || srcPath.ext}`;
 					this.renameItem(oRename.src, name);
-					this.emit("fsync", "filesync", "rename", {"src":oRename.src, "name": name});
+					this.emit("fsync_log", "filesync", "rename", {"src":oRename.src, "name": name});
 				}
 			});
 		}
@@ -45,7 +45,7 @@ class fileSync extends EventEmitter
 			{
 				promises.push(new Promise((resolve, reject)=>
 				{
-					this.emit("fsync", "git", "clone", {"git":git});
+					this.emit("fsync_log", "git", "clone", {"git":git});
 					let clone = cproc.exec(`git clone --progress ${git.src} ${paths.resolve(config.cfgFilePath, git.dest)}`, {}, (error, stdout, stderr)=>
 					{
 						resolve(git);
@@ -53,11 +53,11 @@ class fileSync extends EventEmitter
 					clone.stderr.on('data', (data)=>
 					{
 						data = data.replace(/\n/ig, "");
-						this.emit("fsync", "git", "clone", {"git":git, "data":data});
+						this.emit("fsync_log", "git", "clone", {"git":git, "data":data});
 					});
 					clone.stdout.on('data', (data)=>
 					{
-						this.emit("fsync", "git", "clone", {"git":git, "data":data});
+						this.emit("fsync_log", "git", "clone", {"git":git, "data":data});
 					});
 				}));
 			});
@@ -98,15 +98,15 @@ class fileSync extends EventEmitter
 				});
 				sync._fsWatch.on("close", ()=>
 				{
-					this.emit("fsync", "filesync", "sync_closed", sync.src);
+					this.emit("fsync_log", "filesync", "sync_closed", sync.src);
 					delete sync._fsWatch;
 				});
-				this.emit("fsync", "filesync", "sync_watching", sync);
+				this.emit("fsync_log", "filesync", "sync_watching", sync);
 				sync.active = true;
 			}
 			catch(ex)
 			{
-				this.emit("fsync", "filesync", "not watching", ex.message);
+				this.emit("fsync_log", "filesync", "not watching", ex.message);
 			}
 		});
 	}
@@ -134,7 +134,7 @@ class fileSync extends EventEmitter
 			if(!fileSync.itemExists(dir))
 			{
 				fs.mkdirSync(dir);
-				this.emit("fsync", "dir", "create", {"src":dir});
+				this.emit("fsync_log", "dir", "create", {"src":dir});
 			}
 		}
 	}
@@ -195,14 +195,14 @@ class fileSync extends EventEmitter
 						let fd = fs.openSync(srcPath, "r+");
 						fs.closeSync(fd);
 						fs.copyFileSync(srcPath, destPath);
-						this.emit("fsync", "file", "copy", {"src":srcPath, "dest":destPath});
+						this.emit("fsync_log", "file", "copy", {"src":srcPath, "dest":destPath});
 						break;
 					}
 					catch(ex)
 					{
 						if(++nTimes > 5000)
 						{
-							this.emit("fsync", "file", "copy", {"src":srcPath, "dest":destPath, "exception":ex});
+							this.emit("fsync_log", "file", "copy", {"src":srcPath, "dest":destPath, "exception":ex});
 							break;
 						}
 					}
@@ -226,7 +226,7 @@ class fileSync extends EventEmitter
 				try
 				{
 					fs.rmdirSync(path);
-					this.emit("fsync", "dir", "delete", {"src":path});
+					this.emit("fsync_log", "dir", "delete", {"src":path});
 				}
 				catch(ex)
 				{
@@ -237,7 +237,7 @@ class fileSync extends EventEmitter
 			else
 			{
 				fs.unlinkSync(path);
-				this.emit("fsync", "file", "delete", {"src":path});
+				this.emit("fsync_log", "file", "delete", {"src":path});
 			}
 
 		}
@@ -262,7 +262,7 @@ class fileSync extends EventEmitter
 
 	static fmtLogMessage(type, action, data)
 	{
-		let msg = `${type} ${action} ${JSON.stringify(data)}`;
+		let msg = `${type} ${action} ${data ? JSON.stringify(data) : ""}`;
 		let date = new Date();
 		date = `${fileSync._fmtDateVal(date.getFullYear())}-${fileSync._fmtDateVal(date.getMonth()+1)}-${fileSync._fmtDateVal(date.getDate())} ${fileSync._fmtDateVal(date.getHours())}:${fileSync._fmtDateVal(date.getMinutes())}:${fileSync._fmtDateVal(date.getSeconds())}`;
 		return {"msg":msg, "date":date, "type":type, "action":action, "data":data};
@@ -279,40 +279,52 @@ class fileSync extends EventEmitter
 	{
 		return (dateVal < 10) ? `0${dateVal}` : dateVal;
 	}
+	static log(type, action, data)
+	{
+		if(!module._standalone)
+			return;
+		let log = fileSync.fmtLogMessage(type, action, data);
+		console.log(`[${log.date}] ${log.msg}`);
+	}
+	static processConfigFile(filePath)
+	{
+		var fileSyncs = {};
+		async function startFileSyncs(configs, idx, configFile)
+		{
+			let config = configs[idx];
+			if(config && config.enabled)
+			{
+				config.cfgFilePath = paths.parse(configFile.filePath).dir;
+				let fsync = new fileSync(config);
+				fsync.on("fsync_log", fileSync.log);
+				await fsync.start();
+				fileSyncs[config.name] = fsync;
+			}
+			(configs.length > ++idx) ? startFileSyncs.call(this, configs, idx, configFile) : 5;
+		}
+
+		try
+		{
+			let configFile = fs.readFileSync(filePath);
+			configFile = JSON.parse(configFile);
+			configFile.filePath = filePath;
+			startFileSyncs(configFile.configs, 0, configFile);
+		}
+		catch(ex)
+		{
+			fileSync.log("initialize", "load config", ex);
+			fileSync.log("INFO", "if no config.json file, make one with the 'mkdef' command.");
+		}
+		return fileSyncs;
+	}
 }
 
 //running standalone so read config file
 var arg1 = process.argv[1];
 if(arg1 && arg1.search("filesync.js") != -1)
 {
-	var fileSyncs = {};
-	async function startFileSyncs(configs, idx, configFile)
-	{
-		let config = configs[idx];
-		if(config && config.enabled)
-		{
-			config.cfgFilePath = paths.parse(configFile.filePath).dir;
-			let fsync = new fileSync(config);
-			fsync.on("fsync", log);
-			await fsync.start();
-			fileSyncs[config.name] = fsync;
-		}
-		(configs.length > ++idx) ? startFileSyncs.call(this, configs, idx, configFile) : 5;
-	}
-
-	let cfgFileName = process.argv.slice(2)[0] || "fsconfig.json";
-	try
-	{
-		let configFile = fs.readFileSync(cfgFileName);
-		configFile = JSON.parse(configFile);
-		configFile.filePath = cfgFileName;
-		startFileSyncs(configFile.configs, 0, configFile);
-	}
-	catch(ex)
-	{
-		console.log("Error: no config file specified, or found (will attempt to load 'fsconfig.json' in the working directory by default).");
-		console.log("Use mkdef command to create a default config 'fsconfog.js' in the working directory.");
-	}
+	module._standalone = true;
+	fileSync.processConfigFile(process.argv.slice(2)[0] || "fsconfig.json");
 
 	process.stdin.setEncoding("utf8");
 	process.stdin.on('readable', function()
@@ -345,12 +357,6 @@ if(arg1 && arg1.search("filesync.js") != -1)
 			}			
 		}
 	});
-
-	function log(type, action, data)
-	{
-		let log = fileSync.fmtLogMessage(type, action, data);
-		console.log(`[${log.date}] ${log.msg}`);
-	}
 }
 
 module.exports = 
