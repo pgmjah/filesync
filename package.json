@@ -1,0 +1,30 @@
+{
+	"version": "1.0.1",
+	"publisher": "pgmjah",
+	"name": "filesync",
+	"description": "Synchronize files between directories",
+	"author": {
+		"name": "pgmjah",
+		"email": "pgmjah@gmail.com"
+	},
+	"license": "SEE LICENSE IN license.txt",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/pgmjah/filesync.git"
+	},
+	"main": "filesync.js",
+	"bin": {
+		"filesync": "filesync.js"
+	},
+	"keywords": [
+		"File Synchronization",
+		"File Management",
+		"File Copying",
+		"File Deployment"
+	],
+	"files": [
+		"filesync.js",
+		"fsconfig_default.json"
+	],
+	"dependencies": {}
+}

@@ -1,0 +1,36 @@
+{
+	"configs":
+	[
+		{
+			"name":"sample_sync_config",
+			"enabled":true,
+			"rename":
+			[
+				{
+					"src":"c:/path/to/file/file.ext",
+					"name":"new_name.ext"
+				}
+			],
+			"git":
+			[
+				{
+					"src":"https://github.com/gitrepo/gitrepo.git",
+					"dest":"c:/clone/to/this/location"
+				}
+			],
+			"sync":
+			[
+				{
+					"src":"c:/some/source/folder",
+					"dest":"c:/some/dest/folder",
+					"ignore":
+					[
+						"folder1/relative/to/src",
+						"folder2/relative/to/src"
+					],
+					"bidir":true
+				}
+			]
+		}
+	]
+}
