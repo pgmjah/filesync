@@ -11,9 +11,6 @@ FileSync will keep files synchronized between src and dest locations.  It can al
 * Keep files synchonized between source/destination directories.
 * Simple to configure.
 
-## Extension Settings
-* Show FileSync activity in the statusbar.
-
 ## FileSync Configuration
 * Add file(s) called "fsconfig.json" (see below) to the folders you open, or are part of your workspace.
 
@@ -74,67 +71,7 @@ The FileSync config file is a json object with the following layout:
   * ignore - array of relative paths to src to be ignored when syncing (can be a single object, if just one).
   * bidir - bidirectional synchronization...that is, files will be removed from destination if they don't exist in the source.
 
-## Commands
-* FileSync: Create a fsconfig.json file - will generate a default config file in the workspace folder you choose.
-* FileSync: Toggle synchronizing files/directories - selectively turn on/off synching for various directories.
-* FileSync: Start synchronizing files/directories - start all the FileSyncs in loaded fsconfig.json files.
-* FileSync: Stop synchronizing files/directories" - stop all the currently running FileSyncs.
-
 ## Release Notes
-
-## 1.0.18
-* Relative paths should be valid anywhere in config file.
-
-## 1.0.17
-* Housekeeping.
-
-## 1.0.16
-* Created specific git branch for extension (vsce).
-
-### 1.0.15
-* Put back mkdef standalone command.
-
-### 1.0.14
-* Messed up "main" in package.json...left as needed for npm...my bad!
-
-### 1.0.13
-* Running standalone - added mkdef command to create a default fsconfig.json file.
-
-### 1.0.12
-* Added bin to package.json
-
-### 1.0.11
-* Removed standalone bat file
-
-### 1.0.10
-* Added an 'ignore' section to the fsconfig.json file.  You can put an array of directories which will be skipped when synchronizing (can be a single string, if just one).  ".git" directories are automatically ignored.
-
-### 1.0.9
-* Added note about not working on UNIX...**I'm working on it!**
-
-### 1.0.8
-* Now watching config files for changes...will automatically update when create/edited/deleted
-
-### 1.0.7
-* Cleaned up toggle sync command handling.
-
-### 1.0.6
-* Added config setting to show/hide activity in the statusbar.
-* Added command to toggle on/off file synching for a particular directory.
-
-### 1.0.5
-* Cleaned up start/stop command handling.
-
-### 1.0.4
-* Updated this file (readme.md).
-
-### 1.0.3
-* Just working on proper extension packaging.
-
-### 1.0.2
-
-### 1.0.1
-* Changed default fsconfig.json to use arrays of git/rename instead of single objects.
 
 ### 1.0.0
 
