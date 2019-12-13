@@ -281,7 +281,8 @@ class fileSync extends EventEmitter
 	}
 	static log(type, action, data)
 	{
-		if(!module._standalone)
+		//not running standalone.
+		if(module.parent)
 			return;
 		let log = fileSync.fmtLogMessage(type, action, data);
 		console.log(`[${log.date}] ${log.msg}`);
@@ -323,7 +324,6 @@ class fileSync extends EventEmitter
 var arg1 = process.argv[1];
 if(arg1 && arg1.search("filesync.js") != -1)
 {
-	module._standalone = true;
 	fileSync.processConfigFile(process.argv.slice(2)[0] || "fsconfig.json");
 
 	process.stdin.setEncoding("utf8");
