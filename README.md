@@ -78,8 +78,3 @@ The FileSync config file is a json object with the following layout:
   * bidir - bidirectional synchronization...that is, files will be removed from destination if they don't exist in the source.
 
 ## Release Notes
-
-### 1.0.0
-
-* Initial release of FileSync
-
