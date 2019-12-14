@@ -287,36 +287,36 @@ class fileSync extends EventEmitter
 		let log = fileSync.fmtLogMessage(type, action, data);
 		console.log(`[${log.date}] ${log.msg}`);
 	}
-	static processConfigFile(filePath)
+	static loadConfigFile(filePath, startSyncing)
 	{
-		var fileSyncs = {};
-		async function startFileSyncs(configs, idx, configFile)
+		var configFile = null;
+		async function makeFileSyncs(configs, idx, configFile)
 		{
 			let config = configs[idx];
 			if(config && config.enabled)
 			{
 				config.cfgFilePath = paths.parse(configFile.filePath).dir;
-				let fsync = new fileSync(config);
+				let fsync = config.fsync = new fileSync(config);
 				fsync.on("fsync_log", fileSync.log);
-				await fsync.start();
-				fileSyncs[config.name] = fsync;
+				if(startSyncing)
+					fsync.start();
 			}
-			(configs.length > ++idx) ? startFileSyncs.call(this, configs, idx, configFile) : 5;
+			(configs.length > ++idx) ? makeFileSyncs.call(this, configs, idx, configFile) : 5;
 		}
 
 		try
 		{
-			let configFile = fs.readFileSync(filePath);
+			configFile = fs.readFileSync(filePath);
 			configFile = JSON.parse(configFile);
 			configFile.filePath = filePath;
-			startFileSyncs(configFile.configs, 0, configFile);
+			makeFileSyncs(configFile.configs, 0, configFile);
 		}
 		catch(ex)
 		{
 			fileSync.log("initialize", "load config", ex);
 			fileSync.log("INFO", "if no config.json file, make one with the 'mkdef' command.");
 		}
-		return fileSyncs;
+		return configFile;
 	}
 }
 
@@ -324,8 +324,10 @@ class fileSync extends EventEmitter
 var arg1 = process.argv[1];
 if(arg1 && arg1.search("filesync.js") != -1)
 {
-	fileSync.processConfigFile(process.argv.slice(2)[0] || "fsconfig.json");
+	//load the config file and star the syncs
+	let cfgFile = fileSync.loadConfigFile(process.argv.slice(2)[0] || "fsconfig.json", true);
 
+	//listen for user input
 	process.stdin.setEncoding("utf8");
 	process.stdin.on('readable', function()
 	{
