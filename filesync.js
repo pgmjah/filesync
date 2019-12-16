@@ -318,6 +318,21 @@ class fileSync extends EventEmitter
 		}
 		return configFile;
 	}
+	static createDefaultConfigFile(filePath, fileName)
+	{
+		fileName = fileName || "fsconfig.json";
+		fileName = paths.resolve(filePath, fileName);
+		let fInfo = paths.parse(fileName);
+		let srcPath = paths.parse(module.filename);
+		fs.copyFile(`${srcPath.dir}\\fsconfig_default.json`, fileName, fs.constants.COPYFILE_EXCL, function(err)
+		{
+			if(err)
+				fileSync.log("create default config file", "failed", err);
+			else
+				fileSync.log("create default config file", "success");
+
+		});
+	}
 }
 
 //running standalone so read config file
@@ -339,19 +354,7 @@ if(arg1 && arg1.search("filesync.js") != -1)
 				console.clear();
 			else
 			if(chunk == "mkdef")
-			{
-				info = paths.parse(module.filename);
-				fs.copyFile(`${info.dir}\\fsconfig_default.json`, `${process.cwd()}\\fsconfig.json`, fs.constants.COPYFILE_EXCL, function(err)
-				{
-					if(err)
-						console.log(err);
-					else
-					{
-						console.log("Default fsconfig.json file created.");
-						process.exit();
-					}
-				});
-			}
+				fileSync.createDefaultConfigFile(process.cwd());
 			else
 			if(chunk == "quit" || chunk == "exit")
 			{
