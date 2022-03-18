@@ -73,6 +73,7 @@ The FileSync config file is a json object with the following layout:
   * dest - where to clone the src repos into.
 * sync - array of objects specifying what directories you want synchronized where (can be a single object, if just one).
   * src - the source directory to syncronize.
+  * files - array of file names you want to sync (can be a single object, if just one).  If not present will sync all files in src.
   * dest - the destination directory to keep synchronized.
   * ignore - array of relative paths to src to be ignored when syncing (can be a single object, if just one).
   * bidir - bidirectional synchronization...that is, files will be removed from destination if they don't exist in the source.

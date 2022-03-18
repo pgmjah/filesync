@@ -141,13 +141,13 @@ class fileSync extends EventEmitter
 	syncItem(itemPath, sync)
 	{
 		//if ignored, just continue along our merry way!
-		let ignore = [].concat((sync.ignore instanceof Array) ? sync.ignore : [sync.ignore]);
-		if((-1 != itemPath.search(".git")) || (-1 != ignore.indexOf(itemPath)))
+		let ignoreDirs = [].concat((sync.ignore instanceof Array) ? sync.ignore : [sync.ignore]);
+		if((-1 !== itemPath.search(".git")) || (-1 !== ignoreDirs.indexOf(itemPath)))
 			return;
 
-		itemPath = itemPath.replace(/\\/g, "/");
-		let srcPath = `${sync.src}/${itemPath}`;
-		let destPath = `${sync.dest}/${itemPath}`;
+		itemPath = paths.normalize(itemPath);//itemPath.replace(/\\/g, "/");
+		let srcPath = paths.normalize(`${sync.src}/${itemPath}`);
+		let destPath = paths.normalize(`${sync.dest}/${itemPath}`);
 		let srcStat = fileSync.itemExists(srcPath);
 		let destStat = fileSync.itemExists(destPath);
 
@@ -166,14 +166,12 @@ class fileSync extends EventEmitter
 				this.createFolder(destPath);
 
 			//recurse folders and sync
-			fs.readdirSync(srcPath).forEach((file, index)=>
-			{
+			fs.readdirSync(srcPath).forEach((file, index)=> {
 				this.syncItem(`${itemPath}${itemPath ? "/" : ""}${file}`, sync);//pass relative path...outer will concat with srcPath
 			});
 
 			//clean out files in dest that aren't in src.
-			if(sync.bidir)
-			{
+			if(sync.bidir) {
 				fs.readdirSync(destPath).forEach((file, index)=>
 				{
 					//use full paths...not recursing, just nuking!
@@ -186,6 +184,13 @@ class fileSync extends EventEmitter
 		{
 			if(!destStat || (srcStat.mtimeMs > destStat.mtimeMs))
 			{
+				//only sync specified files.
+				if(itemPath && sync.files) {
+					const syncItems = [].concat((sync.files instanceof Array) ? sync.files : [sync.files]);
+					if(syncItems.length && !syncItems.find( item => paths.normalize(item) === itemPath))
+						return;
+				}
+
 				//big files can be locked while being copied/moved...so try a bunch of times to copy it...if fails, then just bail.
 				let nTimes = 0;
 				while(true)
