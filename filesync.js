@@ -138,12 +138,25 @@ class fileSync extends EventEmitter
 			}
 		}
 	}
+	escapeRegExp(string) {
+	  return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+	}
 	syncItem(itemPath, sync)
 	{
 		//if ignored, just continue along our merry way!
 		let ignoreDirs = [].concat((sync.ignore instanceof Array) ? sync.ignore : [sync.ignore]);
-		if((-1 !== itemPath.search(".git")) || (-1 !== ignoreDirs.indexOf(itemPath)))
-			return;
+	
+		if( itemPath ) {			
+			let regexString = ignoreDirs.map((str) => {
+			  return '(' + this.escapeRegExp(str) + ')';
+			}).join('|');
+			let regex = new RegExp(regexString);
+
+			if (regex.test(itemPath)) {
+			  this.emit("fsync_log", "syncItem", "itemPath excluded", itemPath);
+			  return;
+			}			
+		}
 
 		itemPath = paths.normalize(itemPath);//itemPath.replace(/\\/g, "/");
 		let srcPath = paths.normalize(`${sync.src}/${itemPath}`);
